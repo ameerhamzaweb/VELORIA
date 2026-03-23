@@ -32,7 +32,7 @@ const AppContent = () => {
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
       <ScrollToTop />
-      {!isCheckoutPage && <Navbar onCartOpen={() => setIsCartOpen(true)} />}
+      <Navbar onCartOpen={() => setIsCartOpen(true)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       
       <main className="flex-grow">

@@ -15,10 +15,23 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  // Some of our image URLs (especially "secondary" hover images) can be invalid.
+  // If the secondary image fails to load, fall back to the primary one.
+  const [secondaryFailed, setSecondaryFailed] = useState(false);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const isWishlisted = isInWishlist(product.id);
+  const primaryImage = product.images[0];
+  const secondaryImage = product.images[1];
+
+  const shouldShowSecondary =
+    isHovered && activeImageIndex === 0 && !!secondaryImage && !secondaryFailed;
+
+  const chosenSrc =
+    (shouldShowSecondary ? secondaryImage : product.images[activeImageIndex]) ?? primaryImage;
+
+  const finalSrc = secondaryFailed && chosenSrc === secondaryImage ? primaryImage : chosenSrc;
 
   const handleColorClick = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
@@ -44,10 +57,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
     >
       <Link to={`/product/${product.id}`} className="block overflow-hidden aspect-[3/4] bg-white/5 relative">
         <img
-          src={isHovered && !activeImageIndex && product.images[1] ? product.images[1] : product.images[activeImageIndex]}
+          src={finalSrc}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
           referrerPolicy="no-referrer"
+          onError={() => {
+            // If the secondary (hover) image is broken, permanently mark it failed for this card instance.
+            if (secondaryImage && finalSrc === secondaryImage) setSecondaryFailed(true);
+          }}
         />
         
         {product.isNew && (
